@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* 
+  NEURIX.AI - ANTI-SLOP DESIGN SYSTEM
+  Concept: "Raw & Grounded Wellness"
+  Palette: Obsidian & Ember
+*/
+
+@layer base {
+  :root {
+    /* Base - The Blue Void (Sera AI Style) */
+    --background: 225 75% 35%;
+    /* Vibrant Royal Blue */
+    --foreground: 0 0% 100%;
+    /* White text */
+
+    --card: 225 75% 30%;
+    /* Slightly darker blue for cards */
+    --card-foreground: 0 0% 100%;
+
+    --popover: 225 75% 30%;
+    --popover-foreground: 0 0% 100%;
+
+    /* Brand Accents */
+    --primary: 0 0% 100%;
+    /* White - The main accent in the blue theme */
+    --primary-foreground: 225 75% 35%;
+    /* Blue text on white buttons */
+
+    --secondary: 225 60% 45%;
+    /* Lighter Blue */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 225 40% 25%;
+    --muted-foreground: 225 20% 80%;
+    /* Soft blue-white */
+
+    --accent: 190 90% 70%;
+    /* Cyan hints for 'glass' effects */
+    --accent-foreground: 225 75% 35%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 225 50% 50%;
+    /* Lighter blue border */
+    --input: 225 50% 40%;
+    --ring: 0 0% 100%;
+
+    --radius: 8px;
+    /* Soften edges to match the 'Sera AI' rounded look */
+
+    /* Custom Tokens */
+    --font-heading: 'Syne', sans-serif;
+    --font-body: 'Space Grotesk', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    background: linear-gradient(135deg, hsl(230, 85%, 25%) 0%, hsl(220, 90%, 45%) 100%);
+    background-attachment: fixed;
+    color: hsl(var(--foreground));
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+    overflow-x: hidden;
+  }
+
+  /* Typography Overrides */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+
+  /* Global Noise Texture */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+    opacity: 0.3;
+    mix-blend-mode: overlay;
+  }
+
+  /* Utility Classes for this Design System */
+  .grid-bg {
+    background-size: 40px 40px;
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+  }
+}
+
+/* Scrollbar - Blue Theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background: hsl(225, 75%, 25%);
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(225, 75%, 25%);
+  border-left: 1px solid hsl(225, 75%, 35%);
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(225, 60%, 55%);
+  border: 1px solid hsl(225, 75%, 25%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: white;
+}
+
+/* Mozilla Firefox Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(225, 60%, 55%) hsl(225, 75%, 25%);
+}
+
+/* Text Selection - High Contrast */
+::selection {
+  background-color: white;
+  color: hsl(225, 80%, 35%);
+  text-shadow: none;
+}
