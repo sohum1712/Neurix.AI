@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
-import { User, Lock, ArrowLeft, Mail, Command, Shield, AlertTriangle, CheckCircle, Terminal } from 'lucide-react';
+import { User, Lock, ArrowLeft, Mail, Command, Shield, AlertTriangle, CheckCircle, Terminal, KeyRound } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   GridBackground,
@@ -14,11 +14,37 @@ import {
   GlitchText
 } from '@/components/ui/BrutalistComponents';
 
-type AuthMode = 'login' | 'signup' | 'forgot-password' | 'update-password' | 'verify';
+type AuthMode = 'login' | 'signup' | 'forgot-password' | 'update-password' | 'verify' | 'reset-password';
+
+// Helper function to determine auth mode from path and query params
+function getAuthMode(pathname: string, searchParams: URLSearchParams): AuthMode {
+  // Check query params first
+  const modeParam = searchParams.get('mode');
+  if (modeParam) {
+    return modeParam as AuthMode;
+  }
+
+  // Check path-based routing
+  if (pathname === '/reset-password' || pathname === '/forgot-password') {
+    return 'forgot-password';
+  }
+  if (pathname === '/update-password') {
+    return 'update-password';
+  }
+  if (pathname === '/signup') {
+    return 'signup';
+  }
+  if (pathname === '/login') {
+    return 'login';
+  }
+
+  return 'login';
+}
 
 export default function AuthUniversal() {
   const [searchParams] = useSearchParams();
-  const mode = (searchParams.get('mode') || 'login') as AuthMode;
+  const location = useLocation();
+  const mode = getAuthMode(location.pathname, searchParams);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,9 +57,9 @@ export default function AuthUniversal() {
   const navigate = useNavigate();
   const { signIn, signUp, signInWithGoogle, resetPassword, updatePassword, user } = useAuth();
 
-  // Redirect if already logged in
+  // Redirect if already logged in (except for password update/reset flows)
   useEffect(() => {
-    if (user && mode !== 'update-password' && mode !== 'verify') {
+    if (user && mode !== 'update-password' && mode !== 'verify' && mode !== 'forgot-password' && mode !== 'reset-password') {
       navigate('/dashboard', { replace: true });
     }
   }, [user, mode, navigate]);
@@ -60,10 +86,17 @@ export default function AuthUniversal() {
           setSuccess('AUTHENTICATION_SUCCESSFUL // REDIRECTING...');
           navigate('/dashboard', { replace: true });
         }
-      } else if (mode === 'forgot-password') {
+      } else if (mode === 'forgot-password' || mode === 'reset-password') {
         const { error } = await resetPassword(email);
         if (error) throw error;
         setSuccess('RESET_LINK_SENT // CHECK_INBOX');
+      } else if (mode === 'update-password') {
+        if (password.length < 6) throw new Error("PASSWORD_MUST_BE_AT_LEAST_6_CHARACTERS");
+        if (password !== confirmPassword) throw new Error("PASSWORDS_DO_NOT_MATCH");
+        const { error } = await updatePassword(password);
+        if (error) throw error;
+        setSuccess('PASSWORD_UPDATED_SUCCESSFULLY // REDIRECTING...');
+        setTimeout(() => navigate('/auth?mode=login'), 2000);
       }
     } catch (err: any) {
       setError(err.message || 'SYSTEM_ERROR');
@@ -75,7 +108,8 @@ export default function AuthUniversal() {
   const getTitle = () => {
     switch (mode) {
       case 'signup': return 'New_User_Registration';
-      case 'forgot-password': return 'Password_Reset_Protocol';
+      case 'forgot-password':
+      case 'reset-password': return 'Password_Reset_Protocol';
       case 'update-password': return 'Credential_Update';
       case 'verify': return 'Identity_Verification';
       default: return 'System_Entry';
@@ -156,25 +190,29 @@ export default function AuthUniversal() {
                   </div>
                 )}
 
-                <div className="space-y-1">
-                  <label className="text-[10px] uppercase text-muted-foreground tracking-widest">Email_Address</label>
-                  <div className="relative group">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-white/5 border border-white/20 h-10 pl-10 pr-4 text-sm focus:border-primary focus:outline-none transition-colors placeholder:text-muted-foreground/30"
-                      placeholder="USER@DOMAIN.COM"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-
-                {mode !== 'forgot-password' && (
+                {mode !== 'update-password' && (
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase text-muted-foreground tracking-widest">Passcode</label>
+                    <label className="text-[10px] uppercase text-muted-foreground tracking-widest">Email_Address</label>
+                    <div className="relative group">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full bg-white/5 border border-white/20 h-10 pl-10 pr-4 text-sm focus:border-primary focus:outline-none transition-colors placeholder:text-muted-foreground/30"
+                        placeholder="USER@DOMAIN.COM"
+                        required
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {mode !== 'forgot-password' && mode !== 'reset-password' && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase text-muted-foreground tracking-widest">
+                      {mode === 'update-password' ? 'New_Passcode' : 'Passcode'}
+                    </label>
                     <div className="relative group">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                       <input
@@ -184,6 +222,7 @@ export default function AuthUniversal() {
                         className="w-full bg-white/5 border border-white/20 h-10 pl-10 pr-4 text-sm focus:border-primary focus:outline-none transition-colors placeholder:text-muted-foreground/30"
                         placeholder="••••••••••••"
                         required
+                        minLength={6}
                         disabled={isLoading}
                       />
                     </div>

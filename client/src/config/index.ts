@@ -1,6 +1,7 @@
 // API Configuration
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
-export const CHAT_API_BASE_URL = import.meta.env.VITE_CHAT_API_BASE_URL || 'http://localhost:5001';
+// Chat API is now part of main server under /api/chatbot
+export const CHAT_API_BASE_URL = import.meta.env.VITE_CHAT_API_BASE_URL || 'http://localhost:3001/api';
 
 // Tavus Configuration
 export const TAVUS_CONFIG = {

@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 const navItems = [
   { name: 'Home', href: '/', icon: Home, authRequired: false },
   { name: 'Space', href: '/dashboard', icon: Home, authRequired: true },
+  { name: 'Journey', href: '/journey', icon: BookOpen, authRequired: true },
   { name: 'AI Session', href: '/tavus', icon: Video, authRequired: true },
   { name: 'Schedule', href: '/booking', icon: Calendar, authRequired: true },
   { name: 'Community', href: '/community', icon: Users, authRequired: true },

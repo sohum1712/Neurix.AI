@@ -13,7 +13,9 @@ import {
   Cpu,
   Terminal,
   BookOpen,
-  Sparkles
+  Sparkles,
+  Target,
+  TrendingUp
 } from 'lucide-react';
 import {
   GridBackground,
@@ -24,10 +26,21 @@ import {
   Button3D
 } from '@/components/ui/BrutalistComponents';
 
+// Import new Gemini 3 components
+import WellnessPlanWidget from '@/components/WellnessPlan';
+import CognitiveInsights from '@/components/CognitiveInsights';
+import SessionHistory from '@/components/SessionHistory';
+import EmotionTimeline from '@/components/EmotionTimeline';
+import CognitiveProfileDashboard from '@/components/CognitiveProfileDashboard';
+import WellnessTrajectory from '@/components/WellnessTrajectory';
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { activeConversation, replica } = useTavus();
+
+  // Get userId for API calls - use Supabase user id or fallback to localStorage
+  const userId = user?.id || localStorage.getItem('neurix_user_id') || 'demo_user';
 
   // Mock Data - Softened Tone
   const stats = [
@@ -64,46 +77,38 @@ export default function Dashboard() {
         {/* STATS GRID */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
           {stats.map((stat, i) => (
-            <StatsDisplay key={i} {...stat} delay={i * 0.1} />
+            <StatsDisplay key={i} label={stat.label} value={stat.value} trend={stat.change} direction={stat.isPositive ? "up" : "down"} />
           ))}
         </div>
 
         {/* DASHBOARD WIDGETS */}
         <div className="grid lg:grid-cols-12 gap-8">
 
-          {/* LEFT COLUMN - SESSION HISTORY */}
-          <div className="lg:col-span-8">
-            <HUDContainer title="Recent Journey">
-              <div className="space-y-1">
-                <div className="grid grid-cols-4 text-xs text-muted-foreground uppercase py-2 border-b border-white/10 px-2">
-                  <div>Date</div>
-                  <div>Duration</div>
-                  <div>Mood</div>
-                  <div>Focus Area</div>
-                </div>
-                {recentSessions.map((s, i) => (
-                  <div key={i} className="grid grid-cols-4 py-3 border-b border-white/5 font-mono text-sm hover:bg-white/5 transition-colors cursor-pointer group px-2">
-                    <div className="text-white group-hover:text-primary">{s.date}</div>
-                    <div className="text-muted-foreground">{s.duration}</div>
-                    <div>
-                      <span className="inline-block px-2 py-0.5 border border-white/20 text-[10px] uppercase rounded-full">
-                        {s.mood}
-                      </span>
-                    </div>
-                    <div className="text-muted-foreground">{s.topic}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 text-center">
-                <button className="text-xs font-mono uppercase text-primary hover:underline hover:text-white transition-colors">
-                  &gt;&gt; View Full History
-                </button>
-              </div>
+          {/* LEFT COLUMN - SESSION HISTORY & WELLNESS */}
+          <div className="lg:col-span-8 space-y-8">
+
+            {/* Emotion Timeline - NEW */}
+            <EmotionTimeline userId={userId} days={30} />
+
+            {/* Wellness Plan Widget */}
+            <HUDContainer title="Your Wellness Plan">
+              <WellnessPlanWidget userId={userId} compact={false} />
+            </HUDContainer>
+
+            {/* Cognitive Profile Dashboard - NEW */}
+            <CognitiveProfileDashboard userId={userId} />
+
+            {/* Session History */}
+            <HUDContainer title="Session History">
+              <SessionHistory userId={userId} limit={5} />
             </HUDContainer>
           </div>
 
           {/* RIGHT COLUMN - ACTIONS & PROFILE */}
           <div className="lg:col-span-4 space-y-8">
+
+            {/* Wellness Trajectory - NEW */}
+            <WellnessTrajectory userId={userId} />
 
             {/* AI AVATAR LINK - Clickable */}
             <IsoCard>
@@ -135,22 +140,8 @@ export default function Dashboard() {
               </div>
             </IsoCard>
 
-            {/* INSIGHTS LOG */}
-            <div className="bg-white/5 border border-border p-6 rounded-lg font-mono text-xs space-y-4">
-              <div className="flex items-center gap-2 border-b border-white/10 pb-2 mb-2 text-muted-foreground">
-                <BookOpen className="w-3 h-3" />
-                <span>JOURNEY_INSIGHTS</span>
-              </div>
-              <p className="text-emerald-500 leading-relaxed">
-                &gt; Morning reflection complete.<br />
-                &gt; Anxiety levels trending down.<br />
-                &gt; Focus session active.
-              </p>
-              <p className="text-muted-foreground leading-relaxed">
-                &gt; Daily Tip: Take 5 minutes to breathe deeply before your next task.<br />
-                &gt; Next Milestone: 50 Sessions.
-              </p>
-            </div>
+            {/* COGNITIVE INSIGHTS - AI-powered user profile */}
+            <CognitiveInsights userId={userId} compact={true} />
 
             {/* QUICK ACTIONS */}
             <div className="grid grid-cols-1 gap-4">

@@ -23,7 +23,7 @@ import {
   GlitchText,
   HUDContainer
 } from '@/components/ui/BrutalistComponents';
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -33,10 +33,18 @@ export default function Landing() {
   const y1 = useTransform(scrollY, [0, 500], [0, 200]);
   const y2 = useTransform(scrollY, [0, 500], [0, -150]);
 
-  // Fetch replica on mount for preview
-  useEffect(() => {
-    refreshReplica().catch(console.error);
-  }, []);
+  // State to track if preview should load
+  const [shouldLoadPreview, setShouldLoadPreview] = useState(false);
+  const hasFetchedRef = useRef(false);
+
+  // Only fetch replica when user hovers over the preview area - prevents excessive API calls
+  const handlePreviewHover = () => {
+    if (!shouldLoadPreview && !hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      setShouldLoadPreview(true);
+      refreshReplica().catch(console.error);
+    }
+  };
 
   const handleStartSession = () => {
     if (user) {
@@ -100,6 +108,7 @@ export default function Landing() {
                 <div
                   className="w-full h-[500px] bg-card border border-white/10 relative overflow-hidden flex items-center justify-center rounded-md cursor-pointer group"
                   onClick={() => navigate(user ? '/tavus' : '/role')}
+                  onMouseEnter={handlePreviewHover}
                 >
                   {/* Grid Overlay */}
                   <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 opacity-10">

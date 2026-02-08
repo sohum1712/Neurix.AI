@@ -26,6 +26,7 @@ import NotFound from './pages/NotFound';
 import Resources from "./pages/Resources";
 import Community from "./pages/Community";
 import TavusSession from "./pages/TavusSession";
+import Journey from "./pages/Journey";
 import "./i18n";
 import ChatWidget from "./components/ChatWidget";
 import EmergencyWidget from "./components/EmergencyWidget";
@@ -67,12 +68,8 @@ const App = () => (
               {/* Public routes WITHOUT navbar */}
               <Route path="/role" element={<Roll />} />
 
-              {/* Auth routes (only accessible when NOT logged in) */}
-              <Route path="/auth" element={
-                <PublicRoute>
-                  <AuthUniversal />
-                </PublicRoute>
-              } />
+              {/* Auth routes - /auth allows both public and authenticated access for password reset/update */}
+              <Route path="/auth" element={<AuthUniversal />} />
               <Route path="/login" element={
                 <PublicRoute>
                   <AuthUniversal />
@@ -88,6 +85,8 @@ const App = () => (
                   <AuthUniversal />
                 </PublicRoute>
               } />
+              <Route path="/reset-password" element={<AuthUniversal />} />
+              <Route path="/update-password" element={<AuthUniversal />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
 
               {/* Protected routes WITH navbar */}
@@ -95,6 +94,11 @@ const App = () => (
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/journey" element={
+                  <ProtectedRoute>
+                    <Journey />
                   </ProtectedRoute>
                 } />
                 <Route path="/profile" element={
