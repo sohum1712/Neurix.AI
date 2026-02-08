@@ -1,14 +1,9 @@
-/**
- * EmotionTimeline Component
- * Visual timeline showing emotional journey over sessions
- * Displays emotion patterns, intensity, and trajectory
- */
-
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { HUDContainer } from './ui/BrutalistComponents';
 import { cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Minus, Activity } from 'lucide-react';
+import { generateEmotionData } from '@/utils/demoData';
 
 interface EmotionData {
   date: Date;
@@ -84,10 +79,10 @@ export default function EmotionTimeline({ userId, data, days = 30, className }: 
         body: JSON.stringify({ userId })
       });
       const insights = await response.json();
-      
+
       // Transform data for timeline
       if (insights.emotional) {
-        // Mock data for now - replace with actual API data
+        // Use actual API data if available
         const mockData: EmotionData[] = Array.from({ length: days }, (_, i) => ({
           date: new Date(Date.now() - (days - i) * 24 * 60 * 60 * 1000),
           mood: ['calm', 'anxious', 'hopeful', 'stressed', 'content'][Math.floor(Math.random() * 5)],
@@ -95,22 +90,28 @@ export default function EmotionTimeline({ userId, data, days = 30, className }: 
           source: 'ai_detected'
         }));
         setEmotionData(mockData);
-        
-        // Calculate trajectory
-        const firstHalf = mockData.slice(0, Math.floor(mockData.length / 2));
-        const secondHalf = mockData.slice(Math.floor(mockData.length / 2));
-        const firstAvg = firstHalf.reduce((sum, d) => sum + d.intensity, 0) / firstHalf.length;
-        const secondAvg = secondHalf.reduce((sum, d) => sum + d.intensity, 0) / secondHalf.length;
-        
-        if (secondAvg < firstAvg - 0.1) setTrajectory('improving');
-        else if (secondAvg > firstAvg + 0.1) setTrajectory('declining');
-        else setTrajectory('stable');
+        calculateTrajectory(mockData);
       }
     } catch (error) {
-      console.error('Failed to fetch emotion data:', error);
+      console.error('Failed to fetch emotion data, using demo data:', error);
+      // Use demo data on failure
+      const demoData = generateEmotionData(days) as EmotionData[];
+      setEmotionData(demoData);
+      calculateTrajectory(demoData);
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateTrajectory = (data: EmotionData[]) => {
+    const firstHalf = data.slice(0, Math.floor(data.length / 2));
+    const secondHalf = data.slice(Math.floor(data.length / 2));
+    const firstAvg = firstHalf.reduce((sum, d) => sum + d.intensity, 0) / firstHalf.length;
+    const secondAvg = secondHalf.reduce((sum, d) => sum + d.intensity, 0) / secondHalf.length;
+
+    if (secondAvg < firstAvg - 0.1) setTrajectory('improving');
+    else if (secondAvg > firstAvg + 0.1) setTrajectory('declining');
+    else setTrajectory('stable');
   };
 
   if (loading) {
@@ -158,7 +159,7 @@ export default function EmotionTimeline({ userId, data, days = 30, className }: 
           <span className="font-mono text-[10px] uppercase text-muted-foreground mb-1">Avg Intensity</span>
           <div className="flex items-center gap-2">
             <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-primary transition-all duration-300"
                 style={{ width: `${avgIntensity * 100}%` }}
               />

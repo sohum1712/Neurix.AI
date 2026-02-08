@@ -6,15 +6,10 @@
  * - Planner Agent: Action planning
  * - Ethics Agent: Tone & compliance
  * 
- * CRITICAL: ALL Gemini calls wrapped with geminiLimiter
+ * Uses direct HTTP calls for Gemini 2.0+ compatibility
  */
 
-const { GoogleGenAI } = require('@google/genai');
-const geminiLimiter = require('../utils/geminiLimiter');
-
-const apiKey = process.env.GEMINI_API_KEY;
-const ai = new GoogleGenAI({ apiKey });
-const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-3-flash-preview';
+const { generateContent, parseJSON } = require('../utils/geminiHelper');
 
 // Agent system prompts
 const AGENT_PROMPTS = {
@@ -77,23 +72,6 @@ Return ONLY valid JSON:
 };
 
 class MultiAgentOrchestrator {
-    constructor() {
-        this.ai = ai;
-        this.model = MODEL_NAME;
-    }
-
-    /**
-     * Parse JSON from agent response
-     */
-    parseJSON(text) {
-        try {
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-        } catch (e) {
-            return null;
-        }
-    }
-
     /**
      * Run a single agent
      */
@@ -112,29 +90,20 @@ Context:
 
 Analyze and return JSON.`;
 
-            const config = {
-                model: this.model,
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-                contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 500,
-                }
-            };
-
-            // CRITICAL: Wrap with limiter
-            const response = await geminiLimiter.schedule({ id: `agent-${agentType}` }, async () => {
-                console.log(`🤖 Gemini API call (agent-${agentType})`);
-                return await this.ai.models.generateContent(config);
+            const text = await generateContent(prompt, {
+                systemInstruction: systemPrompt,
+                temperature: 0.7,
+                maxOutputTokens: 500,
+                callId: `agent-${agentType}`
             });
 
-            const result = this.parseJSON(response.text);
+            const result = parseJSON(text);
 
             return {
                 agent: agentType,
                 success: !!result,
                 data: result || {},
-                raw: response.text
+                raw: text
             };
         } catch (error) {
             console.error(`${agentType} agent error:`, error.message);

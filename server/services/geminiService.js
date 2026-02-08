@@ -1,23 +1,21 @@
 /**
- * Gemini Service - HARD RATE LIMITED (NON-NEGOTIABLE)
- * Using Bottleneck to prevent ALL concurrent calls
+ * Gemini Service - Direct HTTP API calls
+ * Uses fetch() for reliability with Gemini 2.0+ models
  * 
- * CRITICAL: Every Gemini API call MUST go through geminiLimiter.schedule()
- * Even ONE unwrapped call will cause 429 errors
+ * CRITICAL: Every Gemini API call goes through rate limiter
  */
 
-const { GoogleGenAI } = require('@google/genai');
 const geminiLimiter = require('../utils/geminiLimiter');
 
-// Initialize client
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
+// Configuration
+const API_KEY = process.env.GEMINI_API_KEY;
+const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
+
+if (!API_KEY) {
     console.error('CRITICAL: GEMINI_API_KEY is missing');
     process.exit(1);
 }
-
-const genai = new GoogleGenAI({ apiKey });
-const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-3-flash-preview';
 
 console.log(`🤖 Gemini Service: HARD rate limiting enabled (${MODEL_NAME})`);
 console.log('⚙️  Max: 1 request every 2 seconds (30/min guaranteed)');
@@ -28,6 +26,49 @@ const CACHE_TTL = 5 * 60 * 1000;
 
 function getCacheKey(prompt, system) {
     return `${system || 'default'}_${prompt.substring(0, 100)}`;
+}
+
+/**
+ * Direct HTTP call to Gemini API
+ */
+async function callGeminiAPI(prompt, options = {}) {
+    const {
+        model = MODEL_NAME,
+        temperature = 0.7,
+        maxOutputTokens = 1000,
+        systemInstruction = null
+    } = options;
+
+    const requestBody = {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+            temperature,
+            maxOutputTokens
+        }
+    };
+
+    if (systemInstruction) {
+        requestBody.systemInstruction = { parts: [{ text: systemInstruction }] };
+    }
+
+    const response = await fetch(
+        `${BASE_URL}/models/${model}:generateContent?key=${API_KEY}`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        }
+    );
+
+    const data = await response.json();
+
+    if (data.error) {
+        const error = new Error(data.error.message);
+        error.status = data.error.code;
+        throw error;
+    }
+
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
 /**
@@ -48,15 +89,9 @@ async function generateContent(prompt, systemInstruction = null, useCache = true
     // CRITICAL: Wrap with Bottleneck limiter
     const text = await geminiLimiter.schedule({ id: callId }, async () => {
         console.log(`🤖 Gemini API call (${callId})`);
-        
-        let fullPrompt = systemInstruction ? `${systemInstruction}\n\n${prompt}` : prompt;
-        
-        const response = await genai.models.generateContent({
-            model: MODEL_NAME,
-            contents: [{ role: 'user', parts: [{ text: fullPrompt }] }]
-        });
 
-        return response.text;
+        let fullPrompt = systemInstruction ? `${systemInstruction}\n\n${prompt}` : prompt;
+        return await callGeminiAPI(fullPrompt);
     });
 
     // Cache the response
@@ -127,14 +162,10 @@ async function generateChatResponse(userMessage, { conversationHistory = [], emo
         const history = conversationHistory.slice(-10).map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`).join('\n');
         const prompt = `${system}\n\nHistory:\n${history}\n\nUser: ${userMessage}\n\nAssistant:`;
 
-        // CRITICAL: Use limiter for chat response
+        // Use rate-limited API call
         const text = await geminiLimiter.schedule({ id: 'generateChatResponse' }, async () => {
             console.log(`🤖 Gemini API call (generateChatResponse)`);
-            const response = await genai.models.generateContent({
-                model: MODEL_NAME,
-                contents: [{ role: 'user', parts: [{ text: prompt }] }]
-            });
-            return response.text;
+            return await callGeminiAPI(prompt);
         });
 
         return { reply: text, therapyStyleUsed: therapyStyle };

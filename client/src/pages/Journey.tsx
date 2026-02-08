@@ -122,7 +122,7 @@ export default function Journey() {
                   <p className="font-sans text-sm text-primary italic">{comparison.encouragement}</p>
                 </div>
 
-                {comparison.improvements.length > 0 && (
+                {comparison.improvements?.length > 0 && (
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
                       <p className="font-mono text-xs uppercase text-green-500 mb-2">Improvements</p>
@@ -136,7 +136,7 @@ export default function Journey() {
                       </ul>
                     </div>
 
-                    {comparison.concerns.length > 0 && (
+                    {comparison.concerns?.length > 0 && (
                       <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                         <p className="font-mono text-xs uppercase text-amber-500 mb-2">Areas to Watch</p>
                         <ul className="space-y-1">

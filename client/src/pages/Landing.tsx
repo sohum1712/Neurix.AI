@@ -25,6 +25,9 @@ import {
 } from '@/components/ui/BrutalistComponents';
 import { useEffect, useState, useRef } from 'react';
 
+// Demo video for Tavus AI preview
+import demoVideo2 from '@/assets/model2.mp4';
+
 export default function Landing() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -111,73 +114,47 @@ export default function Landing() {
                   onMouseEnter={handlePreviewHover}
                 >
                   {/* Grid Overlay */}
-                  <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 opacity-10">
+                  <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 opacity-10 z-10 pointer-events-none">
                     {[...Array(36)].map((_, i) => (
                       <div key={i} className="border border-white/20" />
                     ))}
                   </div>
 
-                  {/* Tavus Video Preview */}
-                  <div className="relative w-full h-full flex items-center justify-center">
-                    {replica?.thumbnail_video_url ? (
-                      /* Actual Tavus AI Avatar Video */
-                      <>
-                        <video
-                          src={replica.thumbnail_video_url}
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                        {/* Gradient overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-background/20 pointer-events-none" />
-                      </>
-                    ) : (
-                      /* Fallback Animated Placeholder */
-                      <div className="relative">
-                        {/* Glowing ring effect */}
-                        <div className="absolute inset-0 -m-8 rounded-full bg-primary/20 blur-2xl animate-pulse" />
-                        <div className="absolute inset-0 -m-4 rounded-full bg-primary/10 blur-xl animate-pulse delay-75" />
+                  {/* Demo Video - Always show loop video */}
+                  <video
+                    src={demoVideo2}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
 
-                        {/* Avatar Circle */}
-                        <div className="relative w-48 h-48 rounded-full bg-gradient-to-br from-primary/30 to-accent/20 border-2 border-white/20 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-                          <Brain className="w-24 h-24 text-white/80 animate-pulse group-hover:text-primary transition-colors" strokeWidth={1} />
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-background/20 pointer-events-none z-10" />
 
-                          {/* Orbiting dots */}
-                          <div className="absolute inset-0 animate-spin" style={{ animationDuration: '8s' }}>
-                            <span className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 bg-primary rounded-full" />
-                          </div>
-                          <div className="absolute inset-0 animate-spin" style={{ animationDuration: '12s', animationDirection: 'reverse' }}>
-                            <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-accent rounded-full" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Call to action overlay on hover */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="text-center">
-                        <p className="font-heading text-2xl uppercase text-white mb-2">Meet Your AI Guide</p>
-                        <p className="font-mono text-xs text-primary uppercase tracking-widest">Click to Start →</p>
-                      </div>
+                  {/* Call to action overlay on hover */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                    <div className="text-center">
+                      <p className="font-heading text-2xl uppercase text-white mb-2">Meet Your AI Guide</p>
+                      <p className="font-mono text-xs text-primary uppercase tracking-widest">Click to Start →</p>
                     </div>
                   </div>
 
                   {/* HUD Overlays */}
-                  <div className="absolute top-4 left-4 font-mono text-xs text-primary flex items-center gap-2">
+                  <div className="absolute top-4 left-4 font-mono text-xs text-primary flex items-center gap-2 z-20">
                     <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                     LIVE
                   </div>
-                  <div className="absolute top-4 right-4 font-mono text-[10px] text-white/50 text-right">
+                  <div className="absolute top-4 right-4 font-mono text-[10px] text-white/50 text-right z-20">
                     <div>TAVUS_AI // v2.4</div>
                     <div>NEURAL_INTERFACE</div>
                   </div>
-                  <div className="absolute bottom-4 left-4 font-mono text-[10px] text-white/50">
+                  <div className="absolute bottom-4 left-4 font-mono text-[10px] text-white/50 z-20">
                     <div>LATENCY: 12ms</div>
                     <div>MODE: STANDBY</div>
                   </div>
-                  <div className="absolute bottom-4 right-4 font-mono text-xs text-white/70">CONNECTION: STABLE</div>
+                  <div className="absolute bottom-4 right-4 font-mono text-xs text-white/70 z-20">CONNECTION: STABLE</div>
                 </div>
               </IsoCard>
             </motion.div>

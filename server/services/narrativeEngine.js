@@ -3,31 +3,14 @@
  * Generates compassionate life story summaries and tracks growth journey
  * Implements long-context memory and recurring pattern detection
  * 
- * CRITICAL: ALL Gemini calls wrapped with geminiLimiter
+ * Uses direct HTTP calls via geminiHelper for Gemini 2.0+ compatibility
  */
 
-const { GoogleGenAI } = require('@google/genai');
-const geminiLimiter = require('../utils/geminiLimiter');
+const { generateContent, parseJSON } = require('../utils/geminiHelper');
 const CognitiveProfile = require('../models/CognitiveProfile');
 const Session = require('../models/Session');
 
-const apiKey = process.env.GEMINI_API_KEY;
-const ai = new GoogleGenAI({ apiKey });
-const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-3-flash-preview';
-
 class NarrativeEngine {
-    /**
-     * Parse JSON from response
-     */
-    parseJSON(text) {
-        try {
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-        } catch (e) {
-            return null;
-        }
-    }
-
     /**
      * Generate comprehensive life narrative
      */
@@ -86,22 +69,13 @@ Return ONLY valid JSON:
   "narrative_tone": "warm|encouraging|reflective|hopeful"
 }`;
 
-            const config = {
-                model: MODEL_NAME,
-                contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.8,
-                    maxOutputTokens: 1000,
-                }
-            };
-
-            // CRITICAL: Wrap with limiter
-            const response = await geminiLimiter.schedule({ id: 'generateLifeNarrative' }, async () => {
-                console.log('🤖 Gemini API call (generateLifeNarrative)');
-                return await ai.models.generateContent(config);
+            const text = await generateContent(prompt, {
+                temperature: 0.8,
+                maxOutputTokens: 1000,
+                callId: 'generateLifeNarrative'
             });
 
-            const narrative = this.parseJSON(response.text);
+            const narrative = parseJSON(text);
 
             if (!narrative) {
                 throw new Error('Failed to parse narrative response');
@@ -149,7 +123,7 @@ Return ONLY valid JSON:
             // Analyze by day of week
             const dayPatterns = {};
             const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            
+
             patterns.forEach(p => {
                 const day = new Date(p.date).getDay();
                 if (!dayPatterns[day]) {
@@ -163,7 +137,7 @@ Return ONLY valid JSON:
             const weeklyInsights = [];
             Object.entries(dayPatterns).forEach(([day, data]) => {
                 if (data.intensities.length < 3) return;
-                
+
                 const avg = data.intensities.reduce((a, b) => a + b, 0) / data.intensities.length;
                 const dominantMood = Object.entries(data.moods).sort((a, b) => b[1] - a[1])[0];
 
@@ -337,7 +311,7 @@ Return ONLY valid JSON:
                 encouragement = 'You\'re moving in the right direction. Trust the process.';
             } else if (improvement < -15) {
                 comparison = 'needs_attention';
-                narrative = `Your emotional intensity has increased by ${improvementAbs.toFixed(1)}% over the past ${timeframe} days. This might indicate you\'re facing new challenges or stressors.`;
+                narrative = `Your emotional intensity has increased by ${improvementAbs.toFixed(1)}% over the past ${timeframe} days. This might indicate you're facing new challenges or stressors.`;
                 encouragement = 'Remember, setbacks are part of growth. Consider reaching out for additional support if needed.';
             } else if (improvement < -5) {
                 comparison = 'declining';
@@ -356,7 +330,7 @@ Return ONLY valid JSON:
             // Compare dominant emotions
             const currentMoods = {};
             const historicalMoods = {};
-            
+
             currentPatterns.forEach(p => currentMoods[p.mood] = (currentMoods[p.mood] || 0) + 1);
             historicalPatterns.forEach(p => historicalMoods[p.mood] = (historicalMoods[p.mood] || 0) + 1);
 
@@ -457,8 +431,8 @@ Return ONLY valid JSON:
             const sortedAnchors = profile.memory_anchors
                 .map(anchor => ({
                     ...anchor,
-                    relevanceScore: anchor.emotional_significance * 0.7 + 
-                                  (1 - (Date.now() - anchor.date.getTime()) / (90 * 24 * 60 * 60 * 1000)) * 0.3
+                    relevanceScore: anchor.emotional_significance * 0.7 +
+                        (1 - (Date.now() - anchor.date.getTime()) / (90 * 24 * 60 * 60 * 1000)) * 0.3
                 }))
                 .sort((a, b) => b.relevanceScore - a.relevanceScore)
                 .slice(0, limit);

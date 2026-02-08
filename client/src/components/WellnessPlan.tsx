@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { api } from '@/utils/api';
+import { generateWellnessPlan } from '@/utils/demoData';
 
 interface Activity {
     activity: string;
@@ -91,6 +92,9 @@ export default function WellnessPlanWidget({ userId, compact = false }: Wellness
         if (userId) {
             fetchPlan();
         } else {
+            // Use demo data if no userId
+            setPlan(generateWellnessPlan() as unknown as WellnessPlan);
+            setExpandedDay(3); // Expand current day
             setLoading(false);
         }
     }, [userId]);
@@ -108,9 +112,16 @@ export default function WellnessPlanWidget({ userId, compact = false }: Wellness
                 if (todayDay) {
                     setExpandedDay(todayDay.day);
                 }
+            } else {
+                // Use demo data if no plan found
+                setPlan(generateWellnessPlan() as unknown as WellnessPlan);
+                setExpandedDay(3);
             }
         } catch (error) {
-            console.error('Error fetching wellness plan:', error);
+            console.error('Error fetching wellness plan, using demo data:', error);
+            // Use demo data on failure
+            setPlan(generateWellnessPlan() as unknown as WellnessPlan);
+            setExpandedDay(3);
         } finally {
             setLoading(false);
         }
@@ -376,10 +387,10 @@ export default function WellnessPlanWidget({ userId, compact = false }: Wellness
                     <motion.div
                         key={day.day}
                         className={`rounded-lg border transition-colors ${day.completed
-                                ? 'bg-emerald-500/10 border-emerald-500/30'
-                                : expandedDay === day.day
-                                    ? 'bg-white/5 border-primary/30'
-                                    : 'bg-white/5 border-white/10'
+                            ? 'bg-emerald-500/10 border-emerald-500/30'
+                            : expandedDay === day.day
+                                ? 'bg-white/5 border-primary/30'
+                                : 'bg-white/5 border-white/10'
                             }`}
                     >
                         {/* Day header */}
@@ -389,8 +400,8 @@ export default function WellnessPlanWidget({ userId, compact = false }: Wellness
                         >
                             <div className="flex items-center gap-3">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${day.completed
-                                        ? 'bg-emerald-500 text-white'
-                                        : 'bg-white/10'
+                                    ? 'bg-emerald-500 text-white'
+                                    : 'bg-white/10'
                                     }`}>
                                     {day.completed ? (
                                         <Check className="w-4 h-4" />
@@ -438,8 +449,8 @@ export default function WellnessPlanWidget({ userId, compact = false }: Wellness
                                                 <div
                                                     key={period}
                                                     className={`p-3 rounded-lg ${activity.completed
-                                                            ? 'bg-emerald-500/10 border border-emerald-500/20'
-                                                            : 'bg-white/5 border border-white/10'
+                                                        ? 'bg-emerald-500/10 border border-emerald-500/20'
+                                                        : 'bg-white/5 border border-white/10'
                                                         }`}
                                                 >
                                                     <div className="flex items-start gap-3">

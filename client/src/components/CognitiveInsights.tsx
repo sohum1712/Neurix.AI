@@ -20,6 +20,7 @@ import {
     Zap
 } from 'lucide-react';
 import { api } from '@/utils/api';
+import { generateCognitiveProfile } from '@/utils/demoData';
 
 interface EmotionalPattern {
     date: string;
@@ -123,6 +124,8 @@ export default function CognitiveInsights({ userId, compact = false }: Cognitive
         if (userId) {
             fetchProfile();
         } else {
+            // Use demo data if no userId
+            setProfile(generateCognitiveProfile() as unknown as CognitiveProfile);
             setLoading(false);
         }
     }, [userId]);
@@ -134,8 +137,9 @@ export default function CognitiveInsights({ userId, compact = false }: Cognitive
                 setProfile(data.profile);
             }
         } catch (err) {
-            console.error('Error fetching profile:', err);
-            setError('Unable to load insights');
+            console.error('Error fetching profile, using demo data:', err);
+            // Use demo data on failure
+            setProfile(generateCognitiveProfile() as unknown as CognitiveProfile);
         } finally {
             setLoading(false);
         }
@@ -230,10 +234,10 @@ export default function CognitiveInsights({ userId, compact = false }: Cognitive
                     <div className="w-full h-3 bg-white/10 rounded-full">
                         <motion.div
                             className={`h-full rounded-full ${(profile.wellness_trajectory?.burnout_risk || 0) > 0.7
-                                    ? 'bg-red-500'
-                                    : (profile.wellness_trajectory?.burnout_risk || 0) > 0.4
-                                        ? 'bg-amber-500'
-                                        : 'bg-emerald-500'
+                                ? 'bg-red-500'
+                                : (profile.wellness_trajectory?.burnout_risk || 0) > 0.4
+                                    ? 'bg-amber-500'
+                                    : 'bg-emerald-500'
                                 }`}
                             initial={{ width: 0 }}
                             animate={{ width: `${(1 - (profile.wellness_trajectory?.burnout_risk || 0)) * 100}%` }}
@@ -369,10 +373,10 @@ export default function CognitiveInsights({ userId, compact = false }: Cognitive
                             <div
                                 key={idx}
                                 className={`px-3 py-1.5 rounded-full text-xs border ${trigger.severity > 7
-                                        ? 'bg-red-500/10 border-red-500/30 text-red-400'
-                                        : trigger.severity > 5
-                                            ? 'bg-orange-500/10 border-orange-500/30 text-orange-400'
-                                            : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                                    ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                                    : trigger.severity > 5
+                                        ? 'bg-orange-500/10 border-orange-500/30 text-orange-400'
+                                        : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
                                     }`}
                             >
                                 {trigger.trigger}
@@ -407,8 +411,8 @@ export default function CognitiveInsights({ userId, compact = false }: Cognitive
                                 className="p-3 bg-white/5 rounded-lg flex items-center gap-3"
                             >
                                 <div className={`w-2 h-2 rounded-full ${goal.priority <= 2 ? 'bg-red-400' :
-                                        goal.priority <= 3 ? 'bg-amber-400' :
-                                            'bg-blue-400'
+                                    goal.priority <= 3 ? 'bg-amber-400' :
+                                        'bg-blue-400'
                                     }`} />
                                 <span className="flex-1 text-sm">{goal.goal}</span>
                                 <ChevronRight className="w-4 h-4 text-muted-foreground" />

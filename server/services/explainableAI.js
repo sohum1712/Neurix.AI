@@ -3,15 +3,10 @@
  * Provides transparency into AI decision-making
  * "Why did the AI say this?"
  * 
- * CRITICAL: ALL Gemini calls wrapped with geminiLimiter
+ * Uses direct HTTP calls via geminiHelper for reliability
  */
 
-const { GoogleGenAI } = require('@google/genai');
-const geminiLimiter = require('../utils/geminiLimiter');
-
-const apiKey = process.env.GEMINI_API_KEY;
-const ai = new GoogleGenAI({ apiKey });
-const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-3-flash-preview';
+const { generateContent, parseJSON } = require('../utils/geminiHelper');
 
 class ExplainableAI {
     /**
@@ -39,39 +34,17 @@ Return ONLY valid JSON:
   "safety_factors": ["factor1"]
 }`;
 
-            const config = {
-                model: MODEL_NAME,
-                contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.5,
-                    maxOutputTokens: 400,
-                }
-            };
-
-            // CRITICAL: Wrap with limiter
-            const result = await geminiLimiter.schedule({ id: 'explainResponse' }, async () => {
-                console.log('🤖 Gemini API call (explainResponse)');
-                return await ai.models.generateContent(config);
+            const text = await generateContent(prompt, {
+                temperature: 0.5,
+                maxOutputTokens: 400,
+                callId: 'explainResponse'
             });
 
-            const explanation = this.parseJSON(result.text);
-
+            const explanation = parseJSON(text);
             return explanation || this.getDefaultExplanation(context);
         } catch (error) {
             console.error('Explanation generation error:', error);
             return this.getDefaultExplanation(context);
-        }
-    }
-
-    /**
-     * Parse JSON from response
-     */
-    parseJSON(text) {
-        try {
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-        } catch (e) {
-            return null;
         }
     }
 
@@ -113,22 +86,13 @@ Return ONLY valid JSON:
   "confidence_reasoning": "why this confidence level"
 }`;
 
-            const config = {
-                model: MODEL_NAME,
-                contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.5,
-                    maxOutputTokens: 300,
-                }
-            };
-
-            // CRITICAL: Wrap with limiter
-            const result = await geminiLimiter.schedule({ id: 'explainEmotionDetection' }, async () => {
-                console.log('🤖 Gemini API call (explainEmotionDetection)');
-                return await ai.models.generateContent(config);
+            const text = await generateContent(prompt, {
+                temperature: 0.5,
+                maxOutputTokens: 300,
+                callId: 'explainEmotionDetection'
             });
 
-            return this.parseJSON(result.text) || {
+            return parseJSON(text) || {
                 explanation: `Detected ${emotionResult.emotion} based on language patterns and emotional cues.`,
                 key_indicators: ['Word choice', 'Tone'],
                 tone_markers: [],
@@ -175,7 +139,7 @@ Return ONLY valid JSON:
             risk_level: level,
             reasoning: explanations[level].reasoning,
             factors_considered: explanations[level].factors,
-            intervention_rationale: riskResult.intervention_needed 
+            intervention_rationale: riskResult.intervention_needed
                 ? 'Additional support recommended based on distress level'
                 : 'Continued monitoring, no immediate intervention needed',
             confidence: riskResult.confidence || 0.7

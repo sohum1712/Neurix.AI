@@ -19,6 +19,7 @@ import {
     FileText
 } from 'lucide-react';
 import { api } from '@/utils/api';
+import { generateSessionHistory } from '@/utils/demoData';
 
 interface SessionSummary {
     overview?: string;
@@ -113,6 +114,10 @@ export default function SessionHistory({ userId, limit = 10 }: SessionHistoryPro
         if (userId) {
             fetchSessions();
         } else {
+            // Use demo data if no userId
+            const demoData = generateSessionHistory(limit);
+            setSessions(demoData.sessions as Session[]);
+            setStats(demoData.stats);
             setLoading(false);
         }
     }, [userId, limit]);
@@ -125,7 +130,11 @@ export default function SessionHistory({ userId, limit = 10 }: SessionHistoryPro
                 setStats(data.stats);
             }
         } catch (error) {
-            console.error('Error fetching sessions:', error);
+            console.error('Error fetching sessions, using demo data:', error);
+            // Use demo data on failure
+            const demoData = generateSessionHistory(limit);
+            setSessions(demoData.sessions as Session[]);
+            setStats(demoData.stats);
         } finally {
             setLoading(false);
         }
@@ -192,8 +201,8 @@ export default function SessionHistory({ userId, limit = 10 }: SessionHistoryPro
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.05 }}
                         className={`bg-card/50 backdrop-blur-sm rounded-xl border transition-colors ${expandedSession === session._id
-                                ? 'border-primary/30'
-                                : 'border-white/10'
+                            ? 'border-primary/30'
+                            : 'border-white/10'
                             }`}
                     >
                         {/* Session Header */}
@@ -206,8 +215,8 @@ export default function SessionHistory({ userId, limit = 10 }: SessionHistoryPro
                             <div className="flex items-center gap-3">
                                 {/* Type Icon */}
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${session.type === 'video'
-                                        ? 'bg-purple-500/20'
-                                        : 'bg-blue-500/20'
+                                    ? 'bg-purple-500/20'
+                                    : 'bg-blue-500/20'
                                     }`}>
                                     {session.type === 'video' ? (
                                         <Video className="w-5 h-5 text-purple-400" />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTavus } from '@/contexts/TavusContext';
@@ -15,7 +15,8 @@ import {
   BookOpen,
   Sparkles,
   Target,
-  TrendingUp
+  TrendingUp,
+  AlertTriangle
 } from 'lucide-react';
 import {
   GridBackground,
@@ -34,6 +35,38 @@ import EmotionTimeline from '@/components/EmotionTimeline';
 import CognitiveProfileDashboard from '@/components/CognitiveProfileDashboard';
 import WellnessTrajectory from '@/components/WellnessTrajectory';
 
+// Demo video for AI companion preview
+import demoVideo1 from '@/assets/model1.mp4';
+
+// Simple error boundary component
+function WidgetErrorFallback({ name }: { name: string }) {
+  return (
+    <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+      <div className="flex items-center gap-2 text-red-400">
+        <AlertTriangle className="w-4 h-4" />
+        <span className="font-mono text-sm">Error loading {name}</span>
+      </div>
+    </div>
+  );
+}
+
+// Safe wrapper for widgets
+function SafeWidget({ name, children }: { name: string; children: React.ReactNode }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError) {
+    return <WidgetErrorFallback name={name} />;
+  }
+
+  try {
+    return <>{children}</>;
+  } catch (e) {
+    console.error(`Error in ${name}:`, e);
+    setHasError(true);
+    return <WidgetErrorFallback name={name} />;
+  }
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -41,6 +74,9 @@ export default function Dashboard() {
 
   // Get userId for API calls - use Supabase user id or fallback to localStorage
   const userId = user?.id || localStorage.getItem('neurix_user_id') || 'demo_user';
+
+  // Debug - remove after fixing
+  console.log('Dashboard rendering, userId:', userId);
 
   // Mock Data - Softened Tone
   const stats = [
@@ -119,18 +155,20 @@ export default function Dashboard() {
                 {/* Overlay on Hover */}
                 <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 pointer-events-none z-20 mix-blend-overlay transition-opacity" />
 
-                {replica?.thumbnail_video_url ? (
-                  <video src={replica.thumbnail_video_url} autoPlay loop muted playsInline className="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 transition-all duration-500" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-card">
-                    <div className="text-center">
-                      <Sparkles className="w-16 h-16 text-white/20 mx-auto mb-4 group-hover:text-primary transition-colors" />
-                      <p className="text-xs text-muted-foreground uppercase">Your AI Guide</p>
-                    </div>
-                  </div>
-                )}
+                {/* Demo Video - Always show loop video */}
+                <video
+                  src={demoVideo1}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
 
-                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background to-transparent z-10">
+                {/* Gradient overlay for text readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent pointer-events-none" />
+
+                <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
                   <h3 className="font-heading text-2xl uppercase text-white mb-1">My Companion</h3>
                   <div className="flex items-center gap-2 text-primary font-mono text-xs">
                     <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
