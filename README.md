@@ -4,7 +4,7 @@
 
 ### *Your AI-Powered Mental Wellness Companion*
 
-<img src="client/logo.png" alt="Neurix.AI Logo" width="150" />
+<img src="client/src/assets/logo/logo.svg" alt="Neurix.AI Logo" width="150" />
 
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -402,7 +402,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **Star ⭐ this repo if you find it helpful!**
 
-<img src="client/logo.png" alt="Neurix.AI" width="60" />
+<img src="client/src/assets/logo/logo.svg" alt="Neurix.AI" width="60" />
 
 *© 2024 Neurix.AI. All rights reserved.*
 

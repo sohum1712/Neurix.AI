@@ -9,6 +9,7 @@ import {
   IsoCard,
   GlitchText
 } from '@/components/ui/BrutalistComponents';
+import logo from '@/assets/logo/logo.svg';
 
 const Roll = () => {
   const navigate = useNavigate();
@@ -19,8 +20,8 @@ const Roll = () => {
 
       {/* HEADER */}
       <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-10 border-b border-white/10 bg-background/80 backdrop-blur-sm">
-        <div className="flex items-center gap-2 text-primary">
-          <Cpu className="w-5 h-5 animate-pulse" />
+        <div className="flex items-center gap-3 text-primary">
+          <img src={logo} alt="Neurix.AI" className="w-8 h-8 object-contain" />
           <span className="font-bold tracking-widest text-sm">NEURIX_ACCESS_POINT</span>
         </div>
         <button onClick={() => navigate(-1)} className="text-xs uppercase hover:text-primary transition-colors flex items-center gap-2">

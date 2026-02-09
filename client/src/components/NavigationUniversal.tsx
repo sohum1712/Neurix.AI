@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import logo from '@/assets/logo/logo.svg';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home,
@@ -69,9 +70,7 @@ export default function NavigationUniversal() {
 
         {/* LOGO */}
         <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-3 group">
-          <div className="w-8 h-8 bg-primary flex items-center justify-center text-primary-foreground font-heading font-bold rounded-md">
-            N
-          </div>
+          <img src={logo} alt="Neurix.ai" className="h-12 w-auto object-contain" />
           <span className="font-heading font-bold text-xl tracking-tighter text-foreground group-hover:text-primary transition-colors">
             Neurix<span className="text-primary">.ai</span>
           </span>
